@@ -13,16 +13,19 @@ from models import *
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--num-epochs', type=int, default=60, metavar='NI',
+    parser.add_argument('--num-epochs', type=int, default=100, metavar='NI',
                         help='num epochs (default: 10)')
-    parser.add_argument('--batch-size', type=int, default=70, metavar='BS',
+    parser.add_argument('--batch-size', type=int, default=1000, metavar='BS',
                         help='batch size (default: 70)')
-    parser.add_argument('--use-cuda', type=bool, default=False, metavar='CUDA',
+    parser.add_argument('--use-cuda', type=bool, default=True, metavar='CUDA',
                         help='use cuda (default: False)')
     parser.add_argument('--learning-rate', type=float, default=0.0005, metavar='LR',
                         help='learning rate (default: 0.0005)')
     parser.add_argument('--mode', type=str, default='vardropout', metavar='M',
                         help='training mode (default: simple)')
+    parser.add_argument('--data_path', type=str, default='/home/zhezhihe/data/')
+    
+    
     args = parser.parse_args()
 
     writer = SummaryWriter(args.mode)
@@ -35,14 +38,14 @@ if __name__ == "__main__":
     }
     Model = Model[args.mode]
 
-    dataset = datasets.MNIST(root='data/',
+    dataset = datasets.MNIST(root=args.data_path,
                              transform=transforms.Compose([
                                  transforms.ToTensor()]),
                              download=True,
                              train=True)
     train_dataloader = t.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
-    dataset = datasets.MNIST(root='data/',
+    dataset = datasets.MNIST(root=args.data_path,
                              transform=transforms.Compose([
                                  transforms.ToTensor()]),
                              download=True,
@@ -83,8 +86,7 @@ if __name__ == "__main__":
 
             if iteration % 50 == 0:
                 print('train epoch {}, iteration {}, loss {}'.format(epoch, iteration, loss.cpu().data.numpy()))
-                #  print('train epoch {}, iteration {}'.format(epoch, iteration))
-                #  print(loss.cpu().data.numpy())
+
 
             if iteration % 100 == 0:
                 loss = 0
@@ -103,11 +105,11 @@ if __name__ == "__main__":
                         loss += model.loss(input=input, target=target, train=False, average=False).cpu().data.numpy()
 
                 loss = loss / (args.batch_size * len(test_dataloader))
-                print('_____________')
+                print('-'*20)
                 print('valid epoch {}, iteration {}'.format(epoch, iteration))
-                print('_____________')
+                print('-'*20)
                 print(loss)
-                print('_____________')
+                print('-'*20)
                 writer.add_scalar('data/loss', loss, epoch * len(train_dataloader) + iteration)
 
     writer.close()
