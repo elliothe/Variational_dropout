@@ -105,11 +105,18 @@ if __name__ == "__main__":
                         loss += model.loss(input=input, target=target, train=False, average=False).cpu().data.numpy()
 
                 loss = loss / (args.batch_size * len(test_dataloader))
-                print('-'*20)
+                print('-'*60)
                 print('valid epoch {}, iteration {}'.format(epoch, iteration))
-                print('-'*20)
-                print(loss)
-                print('-'*20)
-                writer.add_scalar('data/loss', loss, epoch * len(train_dataloader) + iteration)
+                print('-'*60)
+                print('valid epoch {}, loss {}'.format(epoch, loss))
+                print('-'*60)
+                
+                # logging using the tensorboardX
+                writer.add_scalar('data/loss', loss, epoch * len(train_dataloader) + iteration) # val loss
+                
+                # conditionally log the variational dropout
+                if args.mode == 'vardropout':
+                    for name, param in model.named_parameters():
+                        writer.add_histogram(name, param.clone().cpu().data.numpy(), epoch * len(train_dataloader) + iteration)
 
     writer.close()

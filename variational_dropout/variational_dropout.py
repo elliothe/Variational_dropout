@@ -26,13 +26,13 @@ class VariationalDropout(nn.Module):
         self.theta = Parameter(t.FloatTensor(input_size, out_size)) # fully connected weight
         self.bias = Parameter(t.Tensor(out_size))  # bias
 
-        self.log_sigma2 = Parameter(t.FloatTensor(input_size, out_size).fill_(log_sigma2))
+        self.log_sigma2 = Parameter(t.FloatTensor(input_size, out_size).fill_(log_sigma2))  # the Gaussian noise sample iid w.r.t each weight
 
         self.reset_parameters()
 
         self.k = [0.63576, 1.87320, 1.48695]
 
-        self.threshold = threshold
+        self.threshold = threshold  # as it said, this is used for zero the weight if the Gaussian noise ball has too large radius.
 
     def reset_parameters(self):
         stdv = 1. / math.sqrt(self.out_size)
@@ -70,11 +70,11 @@ class VariationalDropout(nn.Module):
         mu = t.mm(input, self.theta)
         std = t.sqrt(t.mm(input ** 2, self.log_sigma2.exp()) + 1e-6)
 
-        eps = Variable(t.randn(*mu.size()))
+        eps = Variable(t.randn(*mu.size())) # sample from standard normal distribution
         if input.is_cuda:
             eps = eps.cuda()
 
-        return std * eps + mu + self.bias, kld
+        return std * eps + mu + self.bias, kld # a reparameterization trick to form the Gaussian dropout
 
     def max_alpha(self):
         log_alpha = self.log_sigma2 - self.theta ** 2

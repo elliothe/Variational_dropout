@@ -17,6 +17,7 @@ eggs/
 lib/
 simple/
 dropout/
+vardropout/
 lib64/
 parts/
 sdist/
